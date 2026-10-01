@@ -5,7 +5,15 @@ body {
     text-align: center;
     padding-top: 100px;
 }
+.fire {
+    color: red;
+    font-size: 50px;
+}
 
+.scan {
+    color: white;
+    font-size: 50px;
+}
 h1 {
     font-size: 50px;
 }
