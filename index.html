@@ -1,26 +1,225 @@
+```html
 <!DOCTYPE html>
 <html lang="nl">
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Drone Tracker GJW 6TWE</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="hoofd">
-        <span class="fire">fire</span>
-        <span class="scan">scan</span>
+
+<header>
+    <div>
+        <h1>🚁 Drone Tracker</h1>
+        <p>GJW 6TWE</p>
     </div>
-    
-    <h1>Welkom op mijn website!</h1>
 
-    <p>Dit is mijn eerste zelfgemaakte website.</p>
+    <div class="connection">
+        <span class="status-dot"></span>
+        <span id="connection-status">SIMULATIE</span>
+    </div>
+</header>
 
-    <button onclick="zegHallo()">Klik hier</button>
 
-    <script src="script.js"></script>
+<main>
+
+    <!-- Drone status -->
+    <section class="dashboard-grid">
+
+        <div class="card">
+            <h2>🔋 Batterij</h2>
+
+            <div class="big-value">
+                <span id="battery">87</span>%
+            </div>
+
+            <div class="progress-container">
+                <div id="battery-bar" class="progress-bar"></div>
+            </div>
+
+            <p>
+                Spanning:
+                <strong><span id="voltage">16.4</span> V</strong>
+            </p>
+        </div>
+
+
+        <div class="card">
+            <h2>📏 Hoogte</h2>
+
+            <div class="big-value">
+                <span id="altitude">24.5</span> m
+            </div>
+
+            <p>Relatieve hoogte</p>
+        </div>
+
+
+        <div class="card">
+            <h2>🚀 Snelheid</h2>
+
+            <div class="big-value">
+                <span id="speed">8.2</span> m/s
+            </div>
+
+            <p>
+                ≈ <span id="speed-kmh">29.5</span> km/u
+            </p>
+        </div>
+
+
+        <div class="card">
+            <h2>🛰️ GPS</h2>
+
+            <div class="big-value">
+                <span id="satellites">14</span>
+            </div>
+
+            <p>Satellieten</p>
+        </div>
+
+    </section>
+
+
+    <!-- Main information -->
+    <section class="main-grid">
+
+        <div class="card map-card">
+
+            <h2>🗺️ Drone locatie</h2>
+
+            <div class="map">
+
+                <div class="drone-marker">
+                    🚁
+                </div>
+
+                <div class="map-info">
+                    <p>
+                        Latitude:
+                        <strong id="latitude">50.8503</strong>
+                    </p>
+
+                    <p>
+                        Longitude:
+                        <strong id="longitude">2.8777</strong>
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>✈️ Drone status</h2>
+
+            <div class="status-row">
+                <span>Flight mode</span>
+                <strong id="mode">AUTO</strong>
+            </div>
+
+            <div class="status-row">
+                <span>Heading</span>
+                <strong><span id="heading">125</span>°</strong>
+            </div>
+
+            <div class="status-row">
+                <span>GPS fix</span>
+                <strong id="gps-status">3D FIX</strong>
+            </div>
+
+            <div class="status-row">
+                <span>Verbinding</span>
+                <strong id="link-status">Verbonden</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Controls -->
+    <section class="card">
+
+        <h2>⚙️ Drone instellingen</h2>
+
+        <div class="controls">
+
+            <label>
+                Flight mode
+
+                <select id="flight-mode">
+                    <option value="STABILIZE">STABILIZE</option>
+                    <option value="ALT HOLD">ALT HOLD</option>
+                    <option value="LOITER">LOITER</option>
+                    <option value="AUTO" selected>AUTO</option>
+                    <option value="GUIDED">GUIDED</option>
+                    <option value="RTL">RTL</option>
+                </select>
+            </label>
+
+
+            <label>
+                Maximale hoogte (m)
+
+                <input
+                    id="max-altitude"
+                    type="number"
+                    value="120"
+                    min="1"
+                >
+            </label>
+
+
+            <button id="save-settings">
+                Instellingen opslaan
+            </button>
+
+        </div>
+
+        <p id="settings-message"></p>
+
+    </section>
+
+
+    <!-- Waypoints -->
+    <section class="card">
+
+        <h2>🎯 Missie</h2>
+
+        <p>
+            Waypoints en automatische missies worden later gekoppeld
+            aan ArduPilot via MAVLink.
+        </p>
+
+        <button id="add-waypoint">
+            + Waypoint toevoegen
+        </button>
+
+        <button id="send-mission">
+            🚀 Missie voorbereiden
+        </button>
+
+        <div id="waypoints"></div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <p>Drone Tracker GJW 6TWE — ArduPilot interface</p>
+</footer>
+
+
+<script src="script.js"></script>
+
 </body>
-    
 </html>
+```
