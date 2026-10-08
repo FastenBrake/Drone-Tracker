@@ -1,24 +1,3 @@
-```javascript
-/*
- * DRONE TRACKER
- * GJW 6TWE
- *
- * Op dit moment gebruiken we SIMULATIEDATA.
- *
- * Later:
- *
- * ArduPilot
- *     ↓
- * MAVLink
- *     ↓
- * Backend
- *     ↓
- * WebSocket
- *     ↓
- * deze JavaScript-code
- */
-
-
 // =====================================================
 // 1. DRONE DATA
 // =====================================================
