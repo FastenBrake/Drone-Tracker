@@ -1,242 +1,108 @@
-// =====================================================
-// 1. DRONE DATA
-// =====================================================
+
+const API_URL = "https://drone-tracker-backend.onrender.com/telemetry";
 
 let drone = {
-
-    battery: 87,
-
-    voltage: 16.4,
-
-    altitude: 24.5,
-
-    speed: 8.2,
-
-    satellites: 14,
-
-    latitude: 50.8503,
-
-    longitude: 2.8777,
-
-    heading: 125,
-
-    mode: "AUTO",
-
-    gpsFix: true
-
+    battery: 0,
+    voltage: 0,
+    altitude: 0,
+    speed: 0,
+    satellites: 0,
+    latitude: 0,
+    longitude: 0,
+    heading: null,
+    mode: "--",
+    gpsFix: false
 };
 
-
-// =====================================================
-// 2. WEBSITE BIJWERKEN
-// =====================================================
+function setText(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+}
 
 function updateDrone(data) {
+    drone = { ...drone, ...data };
 
-    // Batterij
-    document.getElementById("battery").textContent =
-        Math.round(data.battery);
+    setText("battery", Math.round(data.battery ?? 0));
+    setText("voltage", Number(data.voltage ?? 0).toFixed(1));
+    setText("altitude", Number(data.altitude ?? 0).toFixed(1));
+    setText("speed", Number(data.speed ?? 0).toFixed(1));
+    setText("speed-kmh", (Number(data.speed ?? 0) * 3.6).toFixed(1));
+    setText("satellites", data.satellites ?? 0);
+    setText("latitude", Number(data.latitude ?? 0).toFixed(6));
+    setText("longitude", Number(data.longitude ?? 0).toFixed(6));
+    setText("heading", data.heading == null ? "--" : Math.round(data.heading));
+    setText("mode", data.mode ?? "--");
+    setText("gps-status", (data.satellites ?? 0) >= 4 ? "GPS beschikbaar" : "GPS onzeker");
 
-    document.getElementById("battery-bar").style.width =
-        data.battery + "%";
-
-    document.getElementById("voltage").textContent =
-        data.voltage.toFixed(1);
-
-
-    // Hoogte
-    document.getElementById("altitude").textContent =
-        data.altitude.toFixed(1);
-
-
-    // Snelheid
-    document.getElementById("speed").textContent =
-        data.speed.toFixed(1);
-
-    document.getElementById("speed-kmh").textContent =
-        (data.speed * 3.6).toFixed(1);
-
-
-    // GPS
-    document.getElementById("satellites").textContent =
-        data.satellites;
-
-    document.getElementById("latitude").textContent =
-        data.latitude.toFixed(6);
-
-    document.getElementById("longitude").textContent =
-        data.longitude.toFixed(6);
-
-
-    // Heading
-    document.getElementById("heading").textContent =
-        Math.round(data.heading);
-
-
-    // Flight mode
-    document.getElementById("mode").textContent =
-        data.mode;
-
-
-    // GPS status
-    document.getElementById("gps-status").textContent =
-        data.gpsFix ? "3D FIX" : "GEEN FIX";
-}
-
-
-// =====================================================
-// 3. SIMULATIE
-// =====================================================
-//
-// Deze functie doet alsof we telemetrie van de drone
-// ontvangen.
-//
-// LATER verwijderen we deze functie en ontvangen we
-// de data via MAVLink → backend → WebSocket.
-//
-
-function simulateDrone() {
-
-    // Batterij langzaam laten dalen
-
-    drone.battery -= 0.02;
-
-    if (drone.battery < 0) {
-        drone.battery = 100;
+    const batteryBar = document.getElementById("battery-bar");
+    if (batteryBar) {
+        batteryBar.style.width = `${Math.max(0, Math.min(100, data.battery ?? 0))}%`;
     }
 
-
-    // Kleine veranderingen simuleren
-
-    drone.altitude +=
-        (Math.random() - 0.5) * 0.4;
-
-    drone.speed +=
-        (Math.random() - 0.5) * 0.3;
-
-    drone.heading +=
-        (Math.random() - 0.5) * 2;
-
-
-    // Grenzen
-
-    drone.altitude =
-        Math.max(0, drone.altitude);
-
-    drone.speed =
-        Math.max(0, drone.speed);
-
-    drone.heading =
-        (drone.heading + 360) % 360;
-
-
-    // Website opnieuw tekenen
-
-    updateDrone(drone);
+    // Laat de keuzelijst de gemelde vluchtmodus volgen.
+    const modeSelect = document.getElementById("flight-mode");
+    if (modeSelect && [...modeSelect.options].some(option => option.value === data.mode)) {
+        modeSelect.value = data.mode;
+    }
 }
 
+function updateConnection(online) {
+    setText("connection-status", online ? "LIVE" : "OFFLINE");
+    setText("link-status", online ? "Verbonden" : "Geen verbinding");
 
-// =====================================================
-// 4. FLIGHT MODE
-// =====================================================
+    const dot = document.querySelector(".status-dot");
+    if (dot) {
+        dot.style.backgroundColor = online ? "#22c55e" : "#ef4444";
+    }
+}
 
-document
-    .getElementById("flight-mode")
-    .addEventListener("change", function () {
+async function fetchTelemetry() {
+    try {
+        const response = await fetch(API_URL, { cache: "no-store" });
 
-        drone.mode = this.value;
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
-        updateDrone(drone);
-    });
+        const result = await response.json();
 
+        if (result.online && result.data) {
+            updateDrone(result.data);
+            updateConnection(true);
+        } else {
+            updateConnection(false);
+        }
+    } catch (error) {
+        console.error("Telemetrie ophalen mislukt:", error);
+        updateConnection(false);
+    }
+}
 
-// =====================================================
-// 5. INSTELLINGEN OPSLAAN
-// =====================================================
+// Haal onmiddellijk gegevens op en vernieuw ze daarna elke 2 seconden.
+fetchTelemetry();
+setInterval(fetchTelemetry, 2000);
 
-document
-    .getElementById("save-settings")
-    .addEventListener("click", function () {
-
-        const maxAltitude =
-            document.getElementById("max-altitude").value;
-
-        const message =
-            document.getElementById("settings-message");
-
-        message.textContent =
-            "Instellingen opgeslagen (simulatie). " +
-            "Maximale hoogte: " +
-            maxAltitude +
-            " m";
-
-        /*
-         * LATER:
-         *
-         * Hier sturen we bijvoorbeeld:
-         *
-         * MAVLink PARAM_SET
-         *
-         * naar ArduPilot.
-         */
-    });
-
-
-// =====================================================
-// 6. WAYPOINTS
-// =====================================================
+// Deze instellingen zijn voorlopig alleen lokaal; ze sturen
+// geen opdrachten naar de drone.
+document.getElementById("save-settings").addEventListener("click", function () {
+    const maxAltitude = document.getElementById("max-altitude").value;
+    document.getElementById("settings-message").textContent =
+        `Instelling lokaal ingevuld: maximale hoogte ${maxAltitude} m. Niet naar de drone verzonden.`;
+});
 
 let waypointNumber = 0;
 
+document.getElementById("add-waypoint").addEventListener("click", function () {
+    waypointNumber++;
 
-document
-    .getElementById("add-waypoint")
-    .addEventListener("click", function () {
+    const waypoint = document.createElement("div");
+    waypoint.className = "waypoint";
+    waypoint.textContent =
+        `Waypoint ${waypointNumber} — ${Number(drone.latitude).toFixed(5)}, ${Number(drone.longitude).toFixed(5)}`;
 
-        waypointNumber++;
+    document.getElementById("waypoints").appendChild(waypoint);
+});
 
-        const waypoint =
-            document.createElement("div");
-
-        waypoint.className = "waypoint";
-
-        waypoint.textContent =
-            "Waypoint " +
-            waypointNumber +
-            " — " +
-            drone.latitude.toFixed(5) +
-            ", " +
-            drone.longitude.toFixed(5);
-
-        document
-            .getElementById("waypoints")
-            .appendChild(waypoint);
-    });
-
-
-document
-    .getElementById("send-mission")
-    .addEventListener("click", function () {
-
-        alert(
-            "Missie voorbereid.\n\n" +
-            "Later wordt deze missie via MAVLink " +
-            "naar ArduPilot gestuurd."
-        );
-    });
-
-
-// =====================================================
-// 7. START
-// =====================================================
-
-updateDrone(drone);
-
-
-// Elke seconde nieuwe gesimuleerde telemetrie
-
-setInterval(
-    simulateDrone,
-    1000
-);
-```
+document.getElementById("send-mission").addEventListener("click", function () {
+    alert("De missie is nog niet naar de drone verzonden. Deze functie is voorlopig alleen een voorbeeld.");
+});
